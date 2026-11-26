@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>있을지도 · 광명시민 의견 설문 (맵·패스 소개 포함)</title>
+<meta name="description" content="있을지도 맵과 패스를 소개하고 시민 의견을 묻는 설문입니다.">
+<!--
+  응답 자동 수집 설정 (무료, 구글 시트 + Apps Script)
+  1) 구글 시트를 새로 만들고 [확장 프로그램 > Apps Script]에 아래 코드를 붙여 넣습니다.
+
+     function doPost(e) {
+       var d = JSON.parse(e.postData.contents);
+       var ss = SpreadsheetApp.getActiveSpreadsheet();
+       var sh = ss.getSheetByName(d.survey) || ss.insertSheet(d.survey);
+       var keys = Object.keys(d.answers);
+       if (sh.getLastRow() === 0) sh.appendRow(['submittedAt'].concat(keys));
+       var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+       var row = head.map(function (h) {
+         var v = h === 'submittedAt' ? d.submittedAt : d.answers[h];
+         v = Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v));
+         return /^[=+\-@]/.test(v) ? "'" + v : v;   // 수식으로 해석되지 않게
+       });
+       sh.appendRow(row);
+       return ContentService.createTextOutput('ok');
+     }
+
+  2) [배포 > 새 배포 > 웹 앱], 실행 계정 "나", 액세스 "모든 사용자"로 배포합니다.
+  3) 발급된 웹 앱 URL을 아래 스크립트의 SUBMIT_URL 값에 넣습니다.
+     비워 두면 응답자가 요약을 복사해 카톡으로 보내는 방식으로 동작합니다.
+-->
+<style>
+:root{--bg:#f5f7f5;--card:#fff;--ink:#1b2321;--muted:#5b6965;--line:#dde4e0;--accent:#1f6f5c;--on:#fff;--tint:#e8f3ee;--warn:#b0401f}
+@media (prefers-color-scheme:dark){:root{--bg:#111614;--card:#19201e;--ink:#e8eeeb;--muted:#9eaea8;--line:#2a3531;--accent:#5fc4a8;--on:#0d1412;--tint:#1e2c27;--warn:#ff9c7d}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;word-break:keep-all}
+.wrap{max-width:680px;margin:0 auto;padding:0 18px}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--card);padding:8px 12px;border-radius:8px;z-index:9}
+header.hero{padding:28px 0 20px}
+.brand{display:flex;align-items:baseline;gap:10px;font-weight:800;font-size:18px;color:var(--accent)}
+.brand small{font-weight:500;font-size:13px;color:var(--muted)}
+.kicker{display:inline-block;margin-top:22px;padding:3px 10px;border-radius:99px;background:var(--tint);color:var(--accent);font-size:13px;font-weight:700}
+h1{font-size:26px;line-height:1.35;margin:10px 0 8px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:16px 0 0}
+.chips li{font-size:13px;padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--muted)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0}
+.bar .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:12px}
+.bar .row b{color:var(--ink)}
+.track{height:6px;background:var(--line);border-radius:99px;margin-top:8px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .25s}
+main{padding:20px 0 40px}
+.note{background:var(--tint);border-radius:14px;padding:16px 18px;margin:0 0 18px;font-size:15px}
+.note h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.note p{margin:0 0 6px}.note p:last-child{margin:0}
+.note ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.intro[hidden]{display:none}
+.intro{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+.intro h2{font-size:18px;margin:0 0 6px}
+.intro>p{margin:0 0 12px;color:var(--muted);font-size:15px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.duo{grid-template-columns:1fr}}
+.duo div{background:var(--tint);border-radius:12px;padding:14px}
+.duo b{display:block;color:var(--accent);font-size:15px;margin-bottom:4px}
+.duo span{font-size:14.5px;line-height:1.55}
+.intro small{display:block;margin-top:10px;color:var(--muted);font-size:13px}
+.step[hidden]{display:none}
+.step>h2{font-size:20px;margin:6px 0 4px}
+.step>.sd{color:var(--muted);margin:0 0 16px;font-size:15px}
+.stepno{font-size:13px;font-weight:700;color:var(--accent)}
+.q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+.q.bad{border-color:var(--warn)}
+.q h3{font-size:17px;line-height:1.45;margin:0 0 4px;display:flex;gap:8px;align-items:flex-start}
+.q h3 .n{flex:none;color:var(--accent);font-weight:800}
+.q h3 .t{flex:1}
+.tag{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;margin-top:2px}
+.tag.req{border-color:var(--accent);color:var(--accent)}
+.help{color:var(--muted);font-size:14px;margin:0 0 12px}
+.err{color:var(--warn);font-size:14px;margin:10px 0 0;font-weight:600}
+.err[hidden]{display:none}
+fieldset{border:0;padding:0;margin:0 0 4px;min-width:0}
+fieldset+fieldset,.f+.f{margin-top:14px}
+legend,.flabel{padding:0;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px;display:block}
+.opts{display:grid;gap:8px}
+.opts.two{grid-template-columns:1fr 1fr}
+@media (max-width:420px){.opts.two{grid-template-columns:1fr}}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--card)}
+.opt input{flex:none;width:18px;height:18px;margin:3px 0 0;accent-color:var(--accent)}
+.opt span{flex:1;line-height:1.45}
+.opt small{display:block;color:var(--muted);font-size:13px}
+.opt:has(input:checked){border-color:var(--accent);background:var(--tint)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+textarea{min-height:96px;resize:vertical}
+input[type=text]:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.other{margin-top:8px}
+.nav{display:flex;gap:10px;margin-top:18px}
+button{font:inherit;font-weight:700;border-radius:12px;padding:13px 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on);flex:1}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button[disabled]{opacity:.6;cursor:wait}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0;text-align:center}
+#done[hidden]{display:none}
+#done h2{font-size:22px;margin:0 0 6px}
+.status{padding:12px 14px;border-radius:12px;background:var(--tint);font-weight:600;margin:14px 0}
+.status.warn{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+pre.sum{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font:14px/1.6 inherit;max-height:340px;overflow:auto;margin:0}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.join{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--on);font-weight:700;padding:13px 18px;border-radius:12px;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:20px 0 36px;color:var(--muted);font-size:13px}
+footer a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 바로 가기</a>
+<div class="wrap">
+  <header class="hero">
+    <div class="brand">있을지도 <small>광명 동네 가게 · 소셜리빙랩</small></div>
+    <span class="kicker" id="kicker"></span>
+    <h1 id="h1"></h1>
+    <p class="lead" id="lead"></p>
+    <ul class="chips" id="chips"></ul>
+  </header>
+</div>
+<div class="bar" id="bar"><div class="wrap">
+  <div class="row"><span id="steplabel"></span><span>응답 <b id="cnt">0</b> / <span id="tot"></span></span></div>
+  <div class="track" role="progressbar" aria-label="설문 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pb"><i id="pbi"></i></div>
+</div></div>
+<div class="wrap">
+  <main id="main">
+    <section class="intro" id="intro" hidden aria-labelledby="introh"></section>
+    <div class="note" id="notice"></div>
+    <form id="form" novalidate></form>
+    <section id="done" hidden aria-live="polite">
+      <h2 id="donetitle">응답이 정리되었어요</h2>
+      <p class="lead" id="donelead"></p>
+      <div class="status" id="status"></div>
+      <pre class="sum" id="sum" tabindex="0"></pre>
+      <div class="acts">
+        <button type="button" class="pri" id="copy">응답 내용 복사하기</button>
+        <button type="button" id="save">응답 파일(JSON) 저장</button>
+        <button type="button" id="edit">← 응답 수정하기</button>
+        <button type="button" id="reset">새로 작성</button>
+      </div>
+      <p class="hint" id="copyhint" role="status"></p>
+      <a class="join" id="join" hidden target="_blank" rel="noopener"></a>
+    </section>
+  </main>
+  <footer>
+    <div id="foot"></div>
+    <div>문의는 운영팀 카톡으로 주세요. <a href="https://jurinwiz-cell.github.io/issuljido/">동네 지도 보기 →</a></div>
+  </footer>
+</div>
+<script>
+/* ===== 설정: 배포 전에 이 두 값만 채우면 됩니다 ===== */
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycby8Zqo5uiUadaf3dJ5wDrkhvbDuGmUWGsGo8o6t54tC2-I6sqYkq-u1ZIBAmTEOZz0aZg/exec";    // 구글 Apps Script 웹 앱 URL (비우면 복사·카톡 회신 방식)
+const OPENCHAT_URL = "";  // 12월 초 체험 참여용 오픈채팅 링크 (비우면 버튼 숨김)
+/* ================================================== */
+const CFG = {"id": "citizen", "version": 17, "summaryTitle": "있을지도 · 광명시민 의견", "kicker": "시민 의견", "h1": "우리 동네 가게, 어떻게 찾고 이용하세요?", "lead": "광명에 사는 시민의 평소 경험을 듣고 싶어요. 10문항, 약 2분이면 충분합니다.", "chips": ["로그인·앱 설치 없이", "이름·연락처는 묻지 않아요", "선택 문항은 건너뛰기"], "notice": ["응답은 소셜리빙랩 시민팀의 서비스 검토와 통계에만 쓰고, 개인을 특정해 공개하지 않아요.", "이름과 연락처는 묻지 않습니다. 동네와 연령대만 여쭤봐요.", "작성 중인 내용은 이 기기 브라우저에만 잠깐 저장돼요."], "footer": "있을지도 · 광명시 시민참여 소셜리빙랩 6팀(C-2) · 시민 의견 설문", "joinText": "있을지도 체험에 참여하고 싶어요 (오픈채팅)", "steps": [{"title": "평소 동네 가게 이용", "desc": "최근에 실제로 어떻게 하셨는지 떠올려 골라 주세요.", "note": {"title": "이 설문에서 ‘동네 가게’란", "body": ["대형 프랜차이즈나 대형마트가 아닌, 사장님이 동네에서 직접 꾸려 가는 가게를 말해요. 단골 식당, 반찬가게, 동네 빵집, 미용실 같은 곳이에요."]}, "questions": [{"title": "최근 일주일 동안 동네 가게를 몇 번 이용하셨나요?", "short": "최근 일주일 동네 가게 이용", "help": "편의점·프랜차이즈 매장·대형마트는 빼고 세어 주세요.", "fields": [{"id": "c1_local_visits", "type": "radio", "required": true, "cols": 2, "options": [{"v": "0번"}, {"v": "1~2번"}, {"v": "3~5번"}, {"v": "6번 이상"}]}]}, {"title": "최근 3개월 안에 새로 가본 동네 가게가 있다면, 어떻게 알게 되셨나요?", "short": "새 가게를 알게 된 경로", "fields": [{"id": "c4_new_shop", "type": "radio", "options": [{"v": "새로 가본 곳이 없어요"}, {"v": "지나가다 보고"}, {"v": "아는 사람 추천"}, {"v": "검색·지도 앱"}, {"v": "SNS·당근·쿠폰 행사"}]}]}, {"title": "대형 프랜차이즈보다 동네 가게를 덜 가게 된다면, 이유는 무엇인가요?", "short": "동네 가게를 덜 가게 되는 이유", "fields": [{"id": "c3_why_less", "type": "check", "max": 2, "other": "그 밖의 이유를 적어 주세요", "options": [{"v": "어떤 가게가 있는지 잘 몰라서", "d": "홍보나 소개를 본 적이 없어요"}, {"v": "메뉴·가격·영업시간을 미리 알기 어려워서", "d": "가보기 전에는 알 수 없어요"}, {"v": "할인·쿠폰·적립 같은 혜택이 적어서", "d": "프랜차이즈는 앱 쿠폰이 있어요"}, {"v": "가격이 더 비싸거나 품질을 가늠하기 어려워서", "d": "실패할까 봐 망설여져요"}, {"v": "동네 가게를 더 자주 가요", "x": true}]}]}]}, {"title": "패스와 지도에 담을 것", "desc": "맵과 패스에 무엇을 담으면 좋을지 골라 주세요.", "note": {"title": "다시 한번, 맵과 패스는", "body": ["맵은 동네 가게를 상세히 보여주는 지도, 패스는 여러 가게에서 혜택을 받는 이용권이에요."]}, "questions": [{"title": "동네 가게를 상세히 보여주는 지도가 생긴다면 이용하실 것 같나요?", "short": "동네 가게 지도 이용 의향", "help": "영업시간, 메뉴와 가격, 가게 이야기까지 한곳에서 볼 수 있는 지도예요.", "err": "두 가지 모두 골라 주세요.", "fields": [{"id": "c6a_map_use", "type": "radio", "required": true, "label": "지도만 있을 때", "options": [{"v": "가게를 찾을 때마다 열어볼 것 같아요"}, {"v": "새로운 가게를 찾을 때만 볼 것 같아요"}, {"v": "한 번쯤 구경은 해볼 것 같아요"}, {"v": "지금 쓰는 지도 앱으로 충분해요"}, {"v": "잘 모르겠어요"}]}, {"id": "c6b_map_benefit", "type": "radio", "required": true, "label": "그 지도에 가게별 혜택(할인·추가 서비스)까지 담겨 있다면요?", "options": [{"v": "훨씬 자주 볼 것 같아요"}, {"v": "조금 더 볼 것 같아요"}, {"v": "차이 없을 것 같아요"}]}]}, {"title": "지도에 있는 동네 가게를 이용할 때, 어떤 혜택이 있으면 가장 좋으시겠어요?", "short": "가장 원하는 혜택", "help": "처음 가는 가게든 단골 가게든 상관없이 골라 주세요.", "fields": [{"id": "c6_benefit_type", "type": "check", "required": true, "max": 2, "options": [{"v": "가격 할인", "d": "결제할 때 바로 깎아 주기"}, {"v": "추가 서비스", "d": "하나 더 받기, 1회 무료 이용 등"}, {"v": "스탬프 적립", "d": "여러 번 가면 모아서 받기"}, {"v": "다른 동네 가게에서도 쓰는 교차 혜택", "d": "이 가게에서 받아 옆 가게에서 쓰기"}, {"v": "혜택이 없어도 괜찮아요", "x": true}]}]}, {"title": "자주 이용하는 동네 가게는 어떤 곳인가요?", "short": "자주 이용하는 동네 가게", "help": "업종은 상관없어요. 해당하는 곳을 모두 골라 주세요.", "fields": [{"id": "c7_regular", "type": "check", "other": "그 밖의 가게 (업종이나 가게 이름)", "options": [{"v": "식당·반찬"}, {"v": "카페·디저트·빵집"}, {"v": "미용·네일·피부관리"}, {"v": "헬스·운동"}, {"v": "세탁·수선·서점 같은 생활 가게"}]}]}, {"title": "패스에 꼭 들어갔으면 하는 동네 가게는?", "short": "패스에 원하는 업종", "fields": [{"id": "c8_categories", "type": "check", "max": 2, "other": "그 밖의 업종", "options": [{"v": "식당·반찬"}, {"v": "카페·디저트·빵집"}, {"v": "미용·네일·피부관리"}, {"v": "헬스·운동"}, {"v": "세탁·수선·서점 같은 생활 가게"}]}]}, {"title": "처음 가는 동네 가게를 믿고 방문하려면 어떤 정보가 꼭 필요한가요?", "short": "방문 전 필요한 정보", "fields": [{"id": "c10_info", "type": "check", "max": 2, "options": [{"v": "이웃 시민의 솔직한 추천 한마디", "d": "광고가 아닌 실제 후기"}, {"v": "정확한 영업시간·휴무일", "d": "헛걸음하지 않게"}, {"v": "대표 메뉴와 가격대", "d": "들어가기 전에 알 수 있게"}, {"v": "광명사랑화폐 사용 가능 여부", "d": "결제 전에 확인하고 싶어요"}, {"v": "사장님의 서사와 철학", "d": "가게를 하는 이유와 고집하는 점"}]}]}]}, {"title": "거주 동네 · 한마디", "desc": "마지막이에요.", "questions": [{"title": "주로 생활하시는 광명시 동네와 연령대를 선택해 주세요.", "short": "동네·연령대", "err": "동네와 연령대를 골라 주세요.", "help": "동네별·연령대별로 의견이 얼마나 다른지 볼 때만 써요.", "fields": [{"id": "c11_dong", "type": "select", "label": "주로 생활하는 동네", "required": true, "options": ["광명1동", "광명2동", "광명3동", "광명4동", "광명5동", "광명6동", "광명7동", "철산1동", "철산2동", "철산3동", "철산4동", "하안1동", "하안2동", "하안3동", "하안4동", "소하1동", "소하2동", "일직동", "학온동", "기타"]}, {"id": "c11_dong_etc", "type": "text", "label": "기타를 고르셨다면 (선택)", "placeholder": "예: 광명역 인근, 옥길동"}, {"id": "c11_age", "type": "radio", "label": "연령대", "required": true, "cols": 2, "options": [{"v": "20대 이하"}, {"v": "30대"}, {"v": "40대"}, {"v": "50대"}, {"v": "60대 이상"}]}]}, {"title": "우리 동네에서 꼭 소개하고 싶은 숨은 단골 가게나 ‘있을지도’에 바라는 점을 적어 주세요.", "short": "숨은 단골 가게·바라는 점", "help": "한두 줄이면 충분해요. 적어 주신 가게는 허락 없이 공개하지 않습니다.", "fields": [{"id": "c12_wish", "type": "textarea", "placeholder": "예: 철산3동 골목의 작은 빵집을 꼭 소개하고 싶어요. / 영업시간이 정확하면 좋겠어요."}]}]}], "intro": {"title": "‘있을지도’가 뭔가요?", "lead": "광명 소셜리빙랩 시민팀이 기획하고 있는 동네 가게 서비스예요. 시민, 동네 가게, 사회연대경제 기업의 의견을 담아 만들려고 설문을 하고 있어요. 서비스는 두 가지로 이루어져 있어요.", "items": [{"name": "있을지도 맵", "text": "우리 동네 가게를 한눈에 보여주는 지도예요. 영업시간, 메뉴와 가격, 사장님의 이야기까지 볼 수 있어요."}, {"name": "있을지도 패스", "text": "동네 가게 여러 곳을 한 장으로 묶은 이용권이에요. 패스를 보여주면 가게마다 정한 할인이나 추가 서비스 같은 혜택을 받아요."}], "foot": ""}};
+const KEY = "issuljido:" + CFG.id + ":v" + CFG.version;
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (tag, attrs, kids) => {
+  const n = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    if (k === "text") n.textContent = attrs[k];
+    else if (k === "cls") n.className = attrs[k];
+    else if (attrs[k] === true) n.setAttribute(k, "");
+    else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
+  }
+  (kids || []).forEach(c => c && n.appendChild(c));
+  return n;
+};
+let S = {};
+try { S = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { S = {}; }
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+const QS = [];
+CFG.steps.forEach((st, si) => st.questions.forEach(q => { q.step = si; q.no = QS.length + 1; QS.push(q); }));
+const has = f => { const v = S[f.id]; return Array.isArray(v) ? v.length > 0 : !!(v && String(v).trim()); };
+const fieldRequired = f => f.required || (f.requiredIf && f.requiredIf.some(id => S[id] && String(S[id]).trim()));
+const answered = q => q.fields.some(has);
+const valid = q => q.fields.every(f => !fieldRequired(f) || has(f));
+
+$("#kicker").textContent = CFG.kicker;
+$("#h1").textContent = CFG.h1;
+$("#lead").textContent = CFG.lead;
+CFG.chips.forEach(c => $("#chips").appendChild(el("li", { text: c })));
+$("#tot").textContent = QS.length;
+$("#foot").textContent = CFG.footer;
+if (CFG.intro) (function () {
+  const s = $("#intro"); s.hidden = false;
+  s.appendChild(el("h2", { id: "introh", text: CFG.intro.title }));
+  s.appendChild(el("p", { text: CFG.intro.lead }));
+  const d = el("div", { cls: "duo" });
+  CFG.intro.items.forEach(it => d.appendChild(el("div", null, [el("b", { text: it.name }), el("span", { text: it.text })])));
+  s.appendChild(d);
+  if (CFG.intro.foot) s.appendChild(el("small", { text: CFG.intro.foot }));
+})();
+(function () {
+  const n = $("#notice");
+  n.appendChild(el("h3", { text: "알아두세요" }));
+  const ul = el("ul");
+  CFG.notice.forEach(t => ul.appendChild(el("li", { text: t })));
+  n.appendChild(ul);
+})();
+
+function renderField(q, f, single) {
+  const box = el("div", { cls: "f" });
+  const name = f.id;
+  if (f.type === "radio" || f.type === "check") {
+    const fs = el("fieldset");
+    fs.appendChild(el("legend", { text: f.label || q.title, cls: (single || !f.label) ? "sr" : "" }));
+    const opts = el("div", { cls: "opts" + (f.cols === 2 ? " two" : "") });
+    f.options.forEach((o, i) => {
+      const inp = el("input", { type: f.type === "radio" ? "radio" : "checkbox", name: name, value: o.v, id: name + "_" + i });
+      const cur = S[f.id];
+      if (f.type === "radio" ? cur === o.v : (cur || []).includes(o.v)) inp.checked = true;
+      const span = el("span", { text: o.v });
+      if (o.d) span.appendChild(el("small", { text: o.d }));
+      opts.appendChild(el("label", { cls: "opt", for: name + "_" + i }, [inp, span]));
+      inp.addEventListener("change", () => {
+        if (f.type === "radio") S[f.id] = o.v;
+        else {
+          let arr = (S[f.id] || []).slice();
+          if (inp.checked) {
+            if (o.x) arr = [o.v];
+            else { arr = arr.filter(v => !f.options.find(p => p.v === v && p.x)); arr.push(o.v); }
+          } else arr = arr.filter(v => v !== o.v);
+          S[f.id] = arr;
+          syncChecks(fs, f);
+        }
+        changed(q);
+      });
+    });
+    fs.appendChild(opts);
+    if (f.type === "check") setTimeout(() => syncChecks(fs, f), 0);
+    box.appendChild(fs);
+    if (f.other) {
+      const oid = f.id + "_other";
+      const t = el("input", { type: "text", id: oid, placeholder: f.other, "aria-label": "기타 내용", maxlength: 200, cls: "other" });
+      t.value = S[oid] || "";
+      t.addEventListener("input", () => { S[oid] = t.value; persist(); });
+      box.appendChild(t);
+    }
+  } else {
+    if (f.label) box.appendChild(el("label", { cls: "flabel", for: name, text: f.label }));
+    let inp;
+    if (f.type === "select") {
+      inp = el("select", { id: name });
+      inp.appendChild(el("option", { value: "", text: "선택해 주세요" }));
+      f.options.forEach(o => inp.appendChild(el("option", { value: o, text: o })));
+    } else if (f.type === "textarea") inp = el("textarea", { id: name, placeholder: f.placeholder || "", maxlength: 1000 });
+    else if (f.type === "consent") {
+      inp = el("input", { type: "checkbox", id: name });
+      inp.checked = S[f.id] === "동의";
+      box.appendChild(el("label", { cls: "opt", for: name }, [inp, el("span", { text: f.text })]));
+      inp.addEventListener("change", () => { S[f.id] = inp.checked ? "동의" : ""; changed(q); });
+      return box;
+    } else inp = el("input", { type: "text", id: name, placeholder: f.placeholder || "", maxlength: 200 });
+    if (!f.label) inp.setAttribute("aria-label", q.title);
+    inp.value = S[f.id] || "";
+    inp.addEventListener(f.type === "select" ? "change" : "input", () => { S[f.id] = inp.value; changed(q); });
+    box.appendChild(inp);
+  }
+  return box;
+}
+function syncChecks(fs, f) {
+  if (!f.max) return;
+  const arr = S[f.id] || [];
+  fs.querySelectorAll("input[type=checkbox]").forEach(i => { i.disabled = !i.checked && arr.length >= f.max; });
+}
+function changed(q) {
+  persist(); progress();
+  const card = $("#q_" + q.no);
+  if (card.classList.contains("bad") && valid(q)) { card.classList.remove("bad"); $(".err", card).hidden = true; }
+}
+const form = $("#form");
+CFG.steps.forEach((st, si) => {
+  const sec = el("section", { cls: "step", id: "step_" + si, hidden: si !== 0, "aria-labelledby": "sh_" + si });
+  sec.appendChild(el("div", { cls: "stepno", text: (si + 1) + "단계 / " + CFG.steps.length + "단계" }));
+  sec.appendChild(el("h2", { id: "sh_" + si, text: st.title, tabindex: "-1" }));
+  if (st.desc) sec.appendChild(el("p", { cls: "sd", text: st.desc }));
+  if (st.note) {
+    const n = el("div", { cls: "note" });
+    n.appendChild(el("h3", { text: st.note.title }));
+    st.note.body.forEach(p => n.appendChild(el("p", { text: p })));
+    sec.appendChild(n);
+  }
+  st.questions.forEach(q => {
+    const req = q.fields.some(f => f.required);
+    const maxf = q.fields.find(f => f.max);
+    const tag = req ? "필수" : "선택";
+    const card = el("div", { cls: "q", id: "q_" + q.no });
+    card.appendChild(el("h3", null, [el("span", { cls: "n", text: q.no + "." }), el("span", { cls: "t", text: q.title }), el("span", { cls: "tag" + (req ? " req" : ""), text: tag })]));
+    let help = q.help || "";
+    if (maxf) help = (help ? help + " " : "") + "최대 " + maxf.max + "개까지 고를 수 있어요.";
+    if (help) card.appendChild(el("p", { cls: "help", text: help }));
+    const single = q.fields.length === 1;
+    q.fields.forEach(f => card.appendChild(renderField(q, f, single)));
+    card.appendChild(el("p", { cls: "err", hidden: true, role: "alert", text: q.err || "이 문항에 답해 주세요." }));
+    sec.appendChild(card);
+  });
+  const nav = el("div", { cls: "nav" });
+  if (si > 0) { const b = el("button", { type: "button", text: "← 이전" }); b.addEventListener("click", () => go(si - 1)); nav.appendChild(b); }
+  const last = si === CFG.steps.length - 1;
+  const nb = el("button", { type: "button", cls: "pri", text: last ? "설문 완료" : "다음" });
+  nb.addEventListener("click", () => { if (check(si)) last ? finish(nb) : go(si + 1); });
+  nav.appendChild(nb);
+  sec.appendChild(nav);
+  sec.appendChild(el("p", { cls: "hint", text: "작성 중인 내용은 이 기기에만 자동 저장돼요." }));
+  form.appendChild(sec);
+});
+form.addEventListener("submit", e => e.preventDefault());
+
+let cur = 0;
+function go(i, noFocus) {
+  cur = i;
+  CFG.steps.forEach((_, k) => { $("#step_" + k).hidden = k !== i; });
+  $("#steplabel").textContent = (i + 1) + " / " + CFG.steps.length + "단계 · " + CFG.steps[i].title;
+  $("#notice").hidden = i !== 0;
+  if (CFG.intro) $("#intro").hidden = i !== 0;
+  if (!noFocus) { window.scrollTo(0, $("#bar").offsetTop); $("#sh_" + i).focus({ preventScroll: true }); }
+}
+function progress() {
+  const n = QS.filter(answered).length, p = Math.round(n / QS.length * 100);
+  $("#cnt").textContent = n; $("#pbi").style.width = p + "%"; $("#pb").setAttribute("aria-valuenow", p);
+}
+function check(si) {
+  let first = null;
+  QS.filter(q => q.step === si).forEach(q => {
+    const card = $("#q_" + q.no), ok = valid(q);
+    card.classList.toggle("bad", !ok); $(".err", card).hidden = ok;
+    if (!ok && !first) first = card;
+  });
+  if (first) { first.scrollIntoView({ block: "center" }); const i = $("input,select,textarea", first); if (i) i.focus({ preventScroll: true }); }
+  return !first;
+}
+function allIds() {
+  const ids = [];
+  QS.forEach(q => q.fields.forEach(f => { ids.push(f.id); if (f.other) ids.push(f.id + "_other"); }));
+  return ids;
+}
+function payload() {
+  const a = {};
+  allIds().forEach(id => { const v = S[id]; a[id] = Array.isArray(v) ? v : (v == null ? "" : String(v).trim()); });
+  return { survey: CFG.id, version: CFG.version, submittedAt: new Date().toISOString(), answers: a };
+}
+function summary() {
+  const L = ["[" + CFG.summaryTitle + "]"];
+  QS.forEach(q => {
+    const parts = [];
+    q.fields.forEach(f => {
+      let v = S[f.id];
+      if (Array.isArray(v)) v = v.join(", ");
+      if (f.other && S[f.id + "_other"]) v = (v ? v + " / " : "") + "기타: " + S[f.id + "_other"].trim();
+      if (v && String(v).trim()) parts.push((f.label && q.fields.length > 1 ? f.label + ": " : "") + String(v).trim());
+    });
+    L.push(q.no + ". " + (q.short || q.title) + "\n   → " + (parts.length ? parts.join(" | ") : "(응답 없음)"));
+  });
+  return L.join("\n");
+}
+async function finish(btn) {
+  btn.disabled = true;
+  const data = payload();
+  let sent = false;
+  if (SUBMIT_URL) {
+    try {
+      await fetch(SUBMIT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
+      sent = true;
+    } catch (e) { sent = false; }
+  }
+  btn.disabled = false;
+  form.hidden = true; $("#notice").hidden = true; $("#intro").hidden = true; $("#done").hidden = false;
+  $("#sum").textContent = summary();
+  const st = $("#status");
+  if (sent) {
+    st.className = "status"; st.textContent = "응답이 전송되었어요. 소중한 의견 감사합니다.";
+    $("#donetitle").textContent = "응답을 잘 받았어요";
+    $("#donelead").textContent = "아래는 보내 주신 내용이에요. 따로 하실 일은 없습니다.";
+  } else {
+    st.className = "status" + (SUBMIT_URL ? " warn" : "");
+    st.textContent = SUBMIT_URL ? "자동 전송이 되지 않았어요. 아래 내용을 복사해 운영팀 카톡으로 보내 주세요." : "아래 ‘응답 내용 복사하기’를 눌러 운영팀 카톡이나 설문 회신에 붙여 주세요.";
+    $("#donetitle").textContent = "응답이 정리되었어요";
+    $("#donelead").textContent = "한 번만 복사해서 보내 주시면 끝이에요.";
+  }
+  if (OPENCHAT_URL && CFG.joinText) { const j = $("#join"); j.href = OPENCHAT_URL; j.textContent = CFG.joinText; j.hidden = false; }
+  window.scrollTo(0, 0); $("#donetitle").setAttribute("tabindex", "-1"); $("#donetitle").focus({ preventScroll: true });
+  $("#save").onclick = () => {
+    const a = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), download: CFG.id + "-" + data.submittedAt.slice(0, 10) + ".json" });
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+$("#copy").addEventListener("click", async () => {
+  const text = $("#sum").textContent, hint = $("#copyhint");
+  try { await navigator.clipboard.writeText(text); hint.textContent = "복사했어요. 카톡에 붙여넣으면 됩니다."; }
+  catch (e) {
+    const r = document.createRange(); r.selectNodeContents($("#sum"));
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    hint.textContent = "자동 복사가 안 됐어요. 선택된 글을 길게 눌러 복사해 주세요.";
+  }
+});
+$("#edit").addEventListener("click", () => { $("#done").hidden = true; form.hidden = false; $("#notice").hidden = false; go(0); });
+let armed = false;
+$("#reset").addEventListener("click", e => {
+  if (!armed) { armed = true; e.target.textContent = "정말 지울까요? 한 번 더 누르면 지워져요"; return; }
+  try { localStorage.removeItem(KEY); } catch (err) {}
+  location.reload();
+});
+go(0, true); progress();
+</script>
+</body>
+</html>

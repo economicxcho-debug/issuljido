@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>있을지도 · 가게 사장님 설문 (11문항)</title>
+<meta name="description" content="동네 가게를 묶는 패스와 지도에 대한 사장님 의견 설문입니다.">
+<!--
+  응답 자동 수집 설정 (무료, 구글 시트 + Apps Script)
+  1) 구글 시트를 새로 만들고 [확장 프로그램 > Apps Script]에 아래 코드를 붙여 넣습니다.
+
+     function doPost(e) {
+       var d = JSON.parse(e.postData.contents);
+       var ss = SpreadsheetApp.getActiveSpreadsheet();
+       var sh = ss.getSheetByName(d.survey) || ss.insertSheet(d.survey);
+       var keys = Object.keys(d.answers);
+       if (sh.getLastRow() === 0) sh.appendRow(['submittedAt'].concat(keys));
+       var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+       var row = head.map(function (h) {
+         var v = h === 'submittedAt' ? d.submittedAt : d.answers[h];
+         v = Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v));
+         return /^[=+\-@]/.test(v) ? "'" + v : v;   // 수식으로 해석되지 않게
+       });
+       sh.appendRow(row);
+       return ContentService.createTextOutput('ok');
+     }
+
+  2) [배포 > 새 배포 > 웹 앱], 실행 계정 "나", 액세스 "모든 사용자"로 배포합니다.
+  3) 발급된 웹 앱 URL을 아래 스크립트의 SUBMIT_URL 값에 넣습니다.
+     비워 두면 응답자가 요약을 복사해 카톡으로 보내는 방식으로 동작합니다.
+-->
+<style>
+:root{--bg:#f5f7f5;--card:#fff;--ink:#1b2321;--muted:#5b6965;--line:#dde4e0;--accent:#1f6f5c;--on:#fff;--tint:#e8f3ee;--warn:#b0401f}
+@media (prefers-color-scheme:dark){:root{--bg:#111614;--card:#19201e;--ink:#e8eeeb;--muted:#9eaea8;--line:#2a3531;--accent:#5fc4a8;--on:#0d1412;--tint:#1e2c27;--warn:#ff9c7d}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;word-break:keep-all}
+.wrap{max-width:680px;margin:0 auto;padding:0 18px}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--card);padding:8px 12px;border-radius:8px;z-index:9}
+header.hero{padding:28px 0 20px}
+.brand{display:flex;align-items:baseline;gap:10px;font-weight:800;font-size:18px;color:var(--accent)}
+.brand small{font-weight:500;font-size:13px;color:var(--muted)}
+.kicker{display:inline-block;margin-top:22px;padding:3px 10px;border-radius:99px;background:var(--tint);color:var(--accent);font-size:13px;font-weight:700}
+h1{font-size:26px;line-height:1.35;margin:10px 0 8px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:16px 0 0}
+.chips li{font-size:13px;padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--muted)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0}
+.bar .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:12px}
+.bar .row b{color:var(--ink)}
+.track{height:6px;background:var(--line);border-radius:99px;margin-top:8px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .25s}
+main{padding:20px 0 40px}
+.note{background:var(--tint);border-radius:14px;padding:16px 18px;margin:0 0 18px;font-size:15px}
+.note h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.note p{margin:0 0 6px}.note p:last-child{margin:0}
+.note ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.intro[hidden]{display:none}
+.intro{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+.intro h2{font-size:18px;margin:0 0 6px}
+.intro>p{margin:0 0 12px;color:var(--muted);font-size:15px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.duo{grid-template-columns:1fr}}
+.duo div{background:var(--tint);border-radius:12px;padding:14px}
+.duo b{display:block;color:var(--accent);font-size:15px;margin-bottom:4px}
+.duo span{font-size:14.5px;line-height:1.55}
+.intro small{display:block;margin-top:10px;color:var(--muted);font-size:13px}
+.step[hidden]{display:none}
+.step>h2{font-size:20px;margin:6px 0 4px}
+.step>.sd{color:var(--muted);margin:0 0 16px;font-size:15px}
+.stepno{font-size:13px;font-weight:700;color:var(--accent)}
+.q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+.q.bad{border-color:var(--warn)}
+.q h3{font-size:17px;line-height:1.45;margin:0 0 4px;display:flex;gap:8px;align-items:flex-start}
+.q h3 .n{flex:none;color:var(--accent);font-weight:800}
+.q h3 .t{flex:1}
+.tag{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;margin-top:2px}
+.tag.req{border-color:var(--accent);color:var(--accent)}
+.help{color:var(--muted);font-size:14px;margin:0 0 12px}
+.err{color:var(--warn);font-size:14px;margin:10px 0 0;font-weight:600}
+.err[hidden]{display:none}
+fieldset{border:0;padding:0;margin:0 0 4px;min-width:0}
+fieldset+fieldset,.f+.f{margin-top:14px}
+legend,.flabel{padding:0;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px;display:block}
+.opts{display:grid;gap:8px}
+.opts.two{grid-template-columns:1fr 1fr}
+@media (max-width:420px){.opts.two{grid-template-columns:1fr}}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--card)}
+.opt input{flex:none;width:18px;height:18px;margin:3px 0 0;accent-color:var(--accent)}
+.opt span{flex:1;line-height:1.45}
+.opt small{display:block;color:var(--muted);font-size:13px}
+.opt:has(input:checked){border-color:var(--accent);background:var(--tint)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+textarea{min-height:96px;resize:vertical}
+input[type=text]:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.other{margin-top:8px}
+.nav{display:flex;gap:10px;margin-top:18px}
+button{font:inherit;font-weight:700;border-radius:12px;padding:13px 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on);flex:1}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button[disabled]{opacity:.6;cursor:wait}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0;text-align:center}
+#done[hidden]{display:none}
+#done h2{font-size:22px;margin:0 0 6px}
+.status{padding:12px 14px;border-radius:12px;background:var(--tint);font-weight:600;margin:14px 0}
+.status.warn{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+pre.sum{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font:14px/1.6 inherit;max-height:340px;overflow:auto;margin:0}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.join{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--on);font-weight:700;padding:13px 18px;border-radius:12px;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:20px 0 36px;color:var(--muted);font-size:13px}
+footer a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 바로 가기</a>
+<div class="wrap">
+  <header class="hero">
+    <div class="brand">있을지도 <small>광명 동네 가게 · 소셜리빙랩</small></div>
+    <span class="kicker" id="kicker"></span>
+    <h1 id="h1"></h1>
+    <p class="lead" id="lead"></p>
+    <ul class="chips" id="chips"></ul>
+  </header>
+</div>
+<div class="bar" id="bar"><div class="wrap">
+  <div class="row"><span id="steplabel"></span><span>응답 <b id="cnt">0</b> / <span id="tot"></span></span></div>
+  <div class="track" role="progressbar" aria-label="설문 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pb"><i id="pbi"></i></div>
+</div></div>
+<div class="wrap">
+  <main id="main">
+    <section class="intro" id="intro" hidden aria-labelledby="introh"></section>
+    <div class="note" id="notice"></div>
+    <form id="form" novalidate></form>
+    <section id="done" hidden aria-live="polite">
+      <h2 id="donetitle">응답이 정리되었어요</h2>
+      <p class="lead" id="donelead"></p>
+      <div class="status" id="status"></div>
+      <pre class="sum" id="sum" tabindex="0"></pre>
+      <div class="acts">
+        <button type="button" class="pri" id="copy">응답 내용 복사하기</button>
+        <button type="button" id="save">응답 파일(JSON) 저장</button>
+        <button type="button" id="edit">← 응답 수정하기</button>
+        <button type="button" id="reset">새로 작성</button>
+      </div>
+      <p class="hint" id="copyhint" role="status"></p>
+      <a class="join" id="join" hidden target="_blank" rel="noopener"></a>
+    </section>
+  </main>
+  <footer>
+    <div id="foot"></div>
+    <div>문의는 운영팀 카톡으로 주세요. <a href="https://jurinwiz-cell.github.io/issuljido/">동네 지도 보기 →</a></div>
+  </footer>
+</div>
+<script>
+/* ===== 설정: 배포 전에 이 두 값만 채우면 됩니다 ===== */
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycby8Zqo5uiUadaf3dJ5wDrkhvbDuGmUWGsGo8o6t54tC2-I6sqYkq-u1ZIBAmTEOZz0aZg/exec";    // 구글 Apps Script 웹 앱 URL (비우면 복사·카톡 회신 방식)
+const OPENCHAT_URL = "";  // 12월 초 체험 참여용 오픈채팅 링크 (비우면 버튼 숨김)
+/* ================================================== */
+const CFG = {"id": "shop", "version": 14, "summaryTitle": "있을지도 · 가게 사장님 의견", "kicker": "가게 사장님 의견", "h1": "동네 가게가 함께 손님을 맞는 방법, 사장님 생각이 궁금합니다", "lead": "광명 소셜리빙랩 시민팀이 대형 프랜차이즈에 대응해 우리 동네 가게를 살릴 방안을 찾고 있습니다. 사장님 생각을 들려주세요. 11문항, 약 3분입니다.", "chips": ["로그인·앱 설치 없이", "가게 이름은 동의하신 경우에만 공개", "연락처는 원하시는 분만"], "notice": ["응답은 소셜리빙랩 시민팀의 회의와 코칭 자료에만 씁니다.", "가게 이름과 연락처는 마지막에 원하시는 분만 적습니다. 동의 없이 공개하지 않습니다.", "설문에 답하신다고 참여가 확정되는 것은 아닙니다.", "작성 중인 내용은 이 기기 브라우저에만 잠깐 저장돼요."], "footer": "있을지도 · 광명시 시민참여 소셜리빙랩 6팀(C-2) · 가게 사장님 설문", "joinText": "", "steps": [{"title": "우리 가게 이야기", "desc": "먼저 사장님 가게에 대해 간단히 여쭤볼게요.", "questions": [{"title": "어떤 가게인가요?", "short": "가게 정보", "err": "업종과 동네를 골라 주세요.", "fields": [{"id": "s1_category", "type": "select", "label": "업종", "required": true, "options": ["식당·반찬", "카페·디저트·빵집", "미용·네일·피부관리", "헬스·운동", "세탁·수선·서점 같은 생활 가게", "기타"]}, {"id": "s1_dong", "type": "select", "label": "가게가 있는 동네", "required": true, "options": ["광명1동", "광명2동", "광명3동", "광명4동", "광명5동", "광명6동", "광명7동", "철산1동", "철산2동", "철산3동", "철산4동", "하안1동", "하안2동", "하안3동", "하안4동", "소하1동", "소하2동", "일직동", "학온동", "기타"]}]}, {"title": "근처에 대형 프랜차이즈가 생긴 뒤 가게 운영이 어땠나요?", "short": "프랜차이즈 등장 후 운영", "fields": [{"id": "s3_after_franchise", "type": "radio", "required": true, "options": [{"v": "많이 힘들어졌다"}, {"v": "조금 힘들어졌다"}, {"v": "차이 없다"}, {"v": "근처에 프랜차이즈가 없다"}]}]}, {"title": "작은 가게를 살리는 데 지금 가장 필요한 것은 무엇이라고 생각하세요?", "short": "작은 가게에 가장 필요한 것", "fields": [{"id": "s6_needs", "type": "check", "max": 2, "other": "그 밖에 필요한 것", "options": [{"v": "가게를 알릴 홍보 채널"}, {"v": "단골을 만드는 혜택 수단"}, {"v": "주변 가게와의 공동 마케팅"}, {"v": "지역화폐 같은 소비 지원"}, {"v": "임대료·비용 지원"}], "required": true}]}]}, {"title": "패스와 지도", "desc": "맵과 패스에 대한 생각을 골라 주세요.", "note": {"title": "다시 한번, 맵과 패스는", "body": ["맵은 동네 가게를 상세히 보여주는 지도, 패스는 여러 가게를 한 장으로 묶어 혜택을 드리는 이용권입니다."]}, "questions": [{"title": "같은 상권의 다른 업종 가게들과 한 패스로 묶이는 것을 어떻게 생각하세요?", "short": "업종 묶음 패스에 대한 생각", "fields": [{"id": "s7_bundle", "type": "radio", "required": true, "cols": 2, "options": [{"v": "좋다"}, {"v": "업종에 따라 다르다"}, {"v": "잘 모르겠다"}, {"v": "원하지 않는다"}]}, {"id": "s7_reason", "type": "text", "label": "이유 한마디 (선택)", "placeholder": "예: 옆 카페 손님이 우리 가게도 오면 좋겠어요"}]}, {"title": "함께 묶이면 좋겠다 싶은 업종은?", "short": "함께 묶이고 싶은 업종", "fields": [{"id": "s8_partners", "type": "check", "other": "그 밖의 업종이나 가게", "options": [{"v": "식당·반찬"}, {"v": "카페·디저트·빵집"}, {"v": "미용·네일·피부관리"}, {"v": "헬스·운동"}, {"v": "세탁·수선·서점 같은 생활 가게"}]}]}, {"title": "패스를 가져온 손님에게 어떤 방식으로 혜택을 주실 수 있나요?", "short": "줄 수 있는 혜택 방식", "help": "가능한 것을 모두 골라 주세요.", "fields": [{"id": "s9_benefit", "type": "check", "required": true, "options": [{"v": "금액 할인"}, {"v": "추가 서비스", "d": "하나 더 드리기, 1회 무료 이용 등"}, {"v": "스탬프 적립"}, {"v": "교차 혜택", "d": "다른 참여 가게를 다녀온 손님에게만"}, {"v": "혜택 없이 가게 소개만", "x": true}]}]}, {"title": "지도에 기본 정보 말고 더 담고 싶은 것이 있나요?", "short": "기본 정보 외에 담고 싶은 것", "help": "상호, 위치, 영업시간, 대표 메뉴와 가격 같은 기본 정보는 기본으로 들어갑니다. 그 밖에 담고 싶은 것을 모두 골라 주세요.", "fields": [{"id": "s10_extra", "type": "check", "other": "그 밖에 담고 싶은 것", "options": [{"v": "가게를 시작한 계기", "d": "왜 이 가게를 열었는지"}, {"v": "재료·만드는 방식에서 고집하는 점", "d": "우리 가게만의 원칙"}, {"v": "동네와 손님에 대한 생각", "d": "이 동네에서 장사하는 마음"}, {"v": "가게가 지역에 돌려주는 것", "d": "일자리, 나눔 등"}, {"v": "기본 정보만 싣고 싶어요", "x": true}], "required": true}]}]}, {"title": "비용 · 기대 · 참여", "desc": "마지막이에요. 솔직하게 골라 주시면 운영 방식을 정하는 데 큰 도움이 됩니다.", "questions": [{"title": "홍보·마케팅 비용 없이 패스로 거래된 건에만 수수료를 받는 방식이라면 참여하시겠어요?", "short": "거래 수수료 방식 참여 여부", "help": "지금 참여를 정하는 것이 아니라, 앞으로의 운영 방식을 정하려고 의견을 여쭙니다.", "fields": [{"id": "s13_fee", "type": "radio", "options": [{"v": "거래 수수료만 받는다면 참여한다"}, {"v": "수수료가 있으면 참여하지 않는다"}], "required": true}]}, {"title": "지도와 패스로 매출이 어느 정도 늘 것 같으세요?", "short": "예상 매출 변화", "fields": [{"id": "s14_sales", "type": "radio", "cols": 2, "options": [{"v": "늘지 않을 것 같다"}, {"v": "5% 미만"}, {"v": "5~10%"}, {"v": "10% 이상"}, {"v": "모르겠다"}], "required": true}]}, {"title": "이런 서비스가 운영된다면 어디까지 참여하시겠어요?", "short": "참여 범위", "help": "해당하는 단계를 모두 골라 주세요.", "fields": [{"id": "s16_join", "type": "check", "required": true, "options": [{"v": "가게 이름과 정보만 게재"}, {"v": "혜택까지 제공"}, {"v": "시험 운영에 참여"}, {"v": "참여하지 않음", "x": true}]}]}, {"title": "시안을 받아보시려면 가게 이름과 연락처를 남겨 주세요.", "short": "가게 이름·연락처", "err": "연락처를 남기시려면 아래 동의에 체크해 주세요.", "help": "원하시는 분만 적으시면 됩니다. 비워 두셔도 설문은 완료됩니다.", "fields": [{"id": "s17_name", "type": "text", "label": "가게 이름", "placeholder": "예: ○○반찬"}, {"id": "s17_contact", "type": "text", "label": "연락처", "placeholder": "전화번호 또는 카카오톡 ID"}, {"id": "s17_consent", "type": "consent", "requiredIf": ["s17_name", "s17_contact"], "text": "패스 시안 확인과 결과 안내를 위한 연락에 동의합니다. 남기신 정보는 이 목적으로만 쓰고 실증이 끝나면 지웁니다."}]}]}], "intro": {"title": "‘있을지도’가 뭔가요?", "lead": "광명 소셜리빙랩 시민팀이 기획하고 있는 동네 가게 서비스입니다. 시민, 동네 가게, 사회연대경제 기업의 의견을 담아 만들려고 설문을 하고 있습니다. 서비스는 두 가지로 이루어져 있습니다.", "items": [{"name": "있을지도 맵", "text": "우리 가게를 동네 주민에게 상세히 보여주는 지도입니다. 영업시간, 메뉴와 가격, 사장님의 이야기까지 담습니다."}, {"name": "있을지도 패스", "text": "동네 가게 여러 곳을 한 장으로 묶은 이용권입니다. 패스를 가져온 손님에게 가게마다 정한 혜택을 드립니다."}], "foot": "홍보·마케팅 비용은 전혀 받지 않습니다. 패스로 거래된 건에 대해서만 거래 수수료를 받을 계획입니다."}};
+const KEY = "issuljido:" + CFG.id + ":v" + CFG.version;
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (tag, attrs, kids) => {
+  const n = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    if (k === "text") n.textContent = attrs[k];
+    else if (k === "cls") n.className = attrs[k];
+    else if (attrs[k] === true) n.setAttribute(k, "");
+    else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
+  }
+  (kids || []).forEach(c => c && n.appendChild(c));
+  return n;
+};
+let S = {};
+try { S = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { S = {}; }
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+const QS = [];
+CFG.steps.forEach((st, si) => st.questions.forEach(q => { q.step = si; q.no = QS.length + 1; QS.push(q); }));
+const has = f => { const v = S[f.id]; return Array.isArray(v) ? v.length > 0 : !!(v && String(v).trim()); };
+const fieldRequired = f => f.required || (f.requiredIf && f.requiredIf.some(id => S[id] && String(S[id]).trim()));
+const answered = q => q.fields.some(has);
+const valid = q => q.fields.every(f => !fieldRequired(f) || has(f));
+
+$("#kicker").textContent = CFG.kicker;
+$("#h1").textContent = CFG.h1;
+$("#lead").textContent = CFG.lead;
+CFG.chips.forEach(c => $("#chips").appendChild(el("li", { text: c })));
+$("#tot").textContent = QS.length;
+$("#foot").textContent = CFG.footer;
+if (CFG.intro) (function () {
+  const s = $("#intro"); s.hidden = false;
+  s.appendChild(el("h2", { id: "introh", text: CFG.intro.title }));
+  s.appendChild(el("p", { text: CFG.intro.lead }));
+  const d = el("div", { cls: "duo" });
+  CFG.intro.items.forEach(it => d.appendChild(el("div", null, [el("b", { text: it.name }), el("span", { text: it.text })])));
+  s.appendChild(d);
+  if (CFG.intro.foot) s.appendChild(el("small", { text: CFG.intro.foot }));
+})();
+(function () {
+  const n = $("#notice");
+  n.appendChild(el("h3", { text: "알아두세요" }));
+  const ul = el("ul");
+  CFG.notice.forEach(t => ul.appendChild(el("li", { text: t })));
+  n.appendChild(ul);
+})();
+
+function renderField(q, f, single) {
+  const box = el("div", { cls: "f" });
+  const name = f.id;
+  if (f.type === "radio" || f.type === "check") {
+    const fs = el("fieldset");
+    fs.appendChild(el("legend", { text: f.label || q.title, cls: (single || !f.label) ? "sr" : "" }));
+    const opts = el("div", { cls: "opts" + (f.cols === 2 ? " two" : "") });
+    f.options.forEach((o, i) => {
+      const inp = el("input", { type: f.type === "radio" ? "radio" : "checkbox", name: name, value: o.v, id: name + "_" + i });
+      const cur = S[f.id];
+      if (f.type === "radio" ? cur === o.v : (cur || []).includes(o.v)) inp.checked = true;
+      const span = el("span", { text: o.v });
+      if (o.d) span.appendChild(el("small", { text: o.d }));
+      opts.appendChild(el("label", { cls: "opt", for: name + "_" + i }, [inp, span]));
+      inp.addEventListener("change", () => {
+        if (f.type === "radio") S[f.id] = o.v;
+        else {
+          let arr = (S[f.id] || []).slice();
+          if (inp.checked) {
+            if (o.x) arr = [o.v];
+            else { arr = arr.filter(v => !f.options.find(p => p.v === v && p.x)); arr.push(o.v); }
+          } else arr = arr.filter(v => v !== o.v);
+          S[f.id] = arr;
+          syncChecks(fs, f);
+        }
+        changed(q);
+      });
+    });
+    fs.appendChild(opts);
+    if (f.type === "check") setTimeout(() => syncChecks(fs, f), 0);
+    box.appendChild(fs);
+    if (f.other) {
+      const oid = f.id + "_other";
+      const t = el("input", { type: "text", id: oid, placeholder: f.other, "aria-label": "기타 내용", maxlength: 200, cls: "other" });
+      t.value = S[oid] || "";
+      t.addEventListener("input", () => { S[oid] = t.value; persist(); });
+      box.appendChild(t);
+    }
+  } else {
+    if (f.label) box.appendChild(el("label", { cls: "flabel", for: name, text: f.label }));
+    let inp;
+    if (f.type === "select") {
+      inp = el("select", { id: name });
+      inp.appendChild(el("option", { value: "", text: "선택해 주세요" }));
+      f.options.forEach(o => inp.appendChild(el("option", { value: o, text: o })));
+    } else if (f.type === "textarea") inp = el("textarea", { id: name, placeholder: f.placeholder || "", maxlength: 1000 });
+    else if (f.type === "consent") {
+      inp = el("input", { type: "checkbox", id: name });
+      inp.checked = S[f.id] === "동의";
+      box.appendChild(el("label", { cls: "opt", for: name }, [inp, el("span", { text: f.text })]));
+      inp.addEventListener("change", () => { S[f.id] = inp.checked ? "동의" : ""; changed(q); });
+      return box;
+    } else inp = el("input", { type: "text", id: name, placeholder: f.placeholder || "", maxlength: 200 });
+    if (!f.label) inp.setAttribute("aria-label", q.title);
+    inp.value = S[f.id] || "";
+    inp.addEventListener(f.type === "select" ? "change" : "input", () => { S[f.id] = inp.value; changed(q); });
+    box.appendChild(inp);
+  }
+  return box;
+}
+function syncChecks(fs, f) {
+  if (!f.max) return;
+  const arr = S[f.id] || [];
+  fs.querySelectorAll("input[type=checkbox]").forEach(i => { i.disabled = !i.checked && arr.length >= f.max; });
+}
+function changed(q) {
+  persist(); progress();
+  const card = $("#q_" + q.no);
+  if (card.classList.contains("bad") && valid(q)) { card.classList.remove("bad"); $(".err", card).hidden = true; }
+}
+const form = $("#form");
+CFG.steps.forEach((st, si) => {
+  const sec = el("section", { cls: "step", id: "step_" + si, hidden: si !== 0, "aria-labelledby": "sh_" + si });
+  sec.appendChild(el("div", { cls: "stepno", text: (si + 1) + "단계 / " + CFG.steps.length + "단계" }));
+  sec.appendChild(el("h2", { id: "sh_" + si, text: st.title, tabindex: "-1" }));
+  if (st.desc) sec.appendChild(el("p", { cls: "sd", text: st.desc }));
+  if (st.note) {
+    const n = el("div", { cls: "note" });
+    n.appendChild(el("h3", { text: st.note.title }));
+    st.note.body.forEach(p => n.appendChild(el("p", { text: p })));
+    sec.appendChild(n);
+  }
+  st.questions.forEach(q => {
+    const req = q.fields.some(f => f.required);
+    const maxf = q.fields.find(f => f.max);
+    const tag = req ? "필수" : "선택";
+    const card = el("div", { cls: "q", id: "q_" + q.no });
+    card.appendChild(el("h3", null, [el("span", { cls: "n", text: q.no + "." }), el("span", { cls: "t", text: q.title }), el("span", { cls: "tag" + (req ? " req" : ""), text: tag })]));
+    let help = q.help || "";
+    if (maxf) help = (help ? help + " " : "") + "최대 " + maxf.max + "개까지 고를 수 있어요.";
+    if (help) card.appendChild(el("p", { cls: "help", text: help }));
+    const single = q.fields.length === 1;
+    q.fields.forEach(f => card.appendChild(renderField(q, f, single)));
+    card.appendChild(el("p", { cls: "err", hidden: true, role: "alert", text: q.err || "이 문항에 답해 주세요." }));
+    sec.appendChild(card);
+  });
+  const nav = el("div", { cls: "nav" });
+  if (si > 0) { const b = el("button", { type: "button", text: "← 이전" }); b.addEventListener("click", () => go(si - 1)); nav.appendChild(b); }
+  const last = si === CFG.steps.length - 1;
+  const nb = el("button", { type: "button", cls: "pri", text: last ? "설문 완료" : "다음" });
+  nb.addEventListener("click", () => { if (check(si)) last ? finish(nb) : go(si + 1); });
+  nav.appendChild(nb);
+  sec.appendChild(nav);
+  sec.appendChild(el("p", { cls: "hint", text: "작성 중인 내용은 이 기기에만 자동 저장돼요." }));
+  form.appendChild(sec);
+});
+form.addEventListener("submit", e => e.preventDefault());
+
+let cur = 0;
+function go(i, noFocus) {
+  cur = i;
+  CFG.steps.forEach((_, k) => { $("#step_" + k).hidden = k !== i; });
+  $("#steplabel").textContent = (i + 1) + " / " + CFG.steps.length + "단계 · " + CFG.steps[i].title;
+  $("#notice").hidden = i !== 0;
+  if (CFG.intro) $("#intro").hidden = i !== 0;
+  if (!noFocus) { window.scrollTo(0, $("#bar").offsetTop); $("#sh_" + i).focus({ preventScroll: true }); }
+}
+function progress() {
+  const n = QS.filter(answered).length, p = Math.round(n / QS.length * 100);
+  $("#cnt").textContent = n; $("#pbi").style.width = p + "%"; $("#pb").setAttribute("aria-valuenow", p);
+}
+function check(si) {
+  let first = null;
+  QS.filter(q => q.step === si).forEach(q => {
+    const card = $("#q_" + q.no), ok = valid(q);
+    card.classList.toggle("bad", !ok); $(".err", card).hidden = ok;
+    if (!ok && !first) first = card;
+  });
+  if (first) { first.scrollIntoView({ block: "center" }); const i = $("input,select,textarea", first); if (i) i.focus({ preventScroll: true }); }
+  return !first;
+}
+function allIds() {
+  const ids = [];
+  QS.forEach(q => q.fields.forEach(f => { ids.push(f.id); if (f.other) ids.push(f.id + "_other"); }));
+  return ids;
+}
+function payload() {
+  const a = {};
+  allIds().forEach(id => { const v = S[id]; a[id] = Array.isArray(v) ? v : (v == null ? "" : String(v).trim()); });
+  return { survey: CFG.id, version: CFG.version, submittedAt: new Date().toISOString(), answers: a };
+}
+function summary() {
+  const L = ["[" + CFG.summaryTitle + "]"];
+  QS.forEach(q => {
+    const parts = [];
+    q.fields.forEach(f => {
+      let v = S[f.id];
+      if (Array.isArray(v)) v = v.join(", ");
+      if (f.other && S[f.id + "_other"]) v = (v ? v + " / " : "") + "기타: " + S[f.id + "_other"].trim();
+      if (v && String(v).trim()) parts.push((f.label && q.fields.length > 1 ? f.label + ": " : "") + String(v).trim());
+    });
+    L.push(q.no + ". " + (q.short || q.title) + "\n   → " + (parts.length ? parts.join(" | ") : "(응답 없음)"));
+  });
+  return L.join("\n");
+}
+async function finish(btn) {
+  btn.disabled = true;
+  const data = payload();
+  let sent = false;
+  if (SUBMIT_URL) {
+    try {
+      await fetch(SUBMIT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
+      sent = true;
+    } catch (e) { sent = false; }
+  }
+  btn.disabled = false;
+  form.hidden = true; $("#notice").hidden = true; $("#intro").hidden = true; $("#done").hidden = false;
+  $("#sum").textContent = summary();
+  const st = $("#status");
+  if (sent) {
+    st.className = "status"; st.textContent = "응답이 전송되었어요. 소중한 의견 감사합니다.";
+    $("#donetitle").textContent = "응답을 잘 받았어요";
+    $("#donelead").textContent = "아래는 보내 주신 내용이에요. 따로 하실 일은 없습니다.";
+  } else {
+    st.className = "status" + (SUBMIT_URL ? " warn" : "");
+    st.textContent = SUBMIT_URL ? "자동 전송이 되지 않았어요. 아래 내용을 복사해 운영팀 카톡으로 보내 주세요." : "아래 ‘응답 내용 복사하기’를 눌러 운영팀 카톡이나 설문 회신에 붙여 주세요.";
+    $("#donetitle").textContent = "응답이 정리되었어요";
+    $("#donelead").textContent = "한 번만 복사해서 보내 주시면 끝이에요.";
+  }
+  if (OPENCHAT_URL && CFG.joinText) { const j = $("#join"); j.href = OPENCHAT_URL; j.textContent = CFG.joinText; j.hidden = false; }
+  window.scrollTo(0, 0); $("#donetitle").setAttribute("tabindex", "-1"); $("#donetitle").focus({ preventScroll: true });
+  $("#save").onclick = () => {
+    const a = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), download: CFG.id + "-" + data.submittedAt.slice(0, 10) + ".json" });
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+$("#copy").addEventListener("click", async () => {
+  const text = $("#sum").textContent, hint = $("#copyhint");
+  try { await navigator.clipboard.writeText(text); hint.textContent = "복사했어요. 카톡에 붙여넣으면 됩니다."; }
+  catch (e) {
+    const r = document.createRange(); r.selectNodeContents($("#sum"));
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    hint.textContent = "자동 복사가 안 됐어요. 선택된 글을 길게 눌러 복사해 주세요.";
+  }
+});
+$("#edit").addEventListener("click", () => { $("#done").hidden = true; form.hidden = false; $("#notice").hidden = false; go(0); });
+let armed = false;
+$("#reset").addEventListener("click", e => {
+  if (!armed) { armed = true; e.target.textContent = "정말 지울까요? 한 번 더 누르면 지워져요"; return; }
+  try { localStorage.removeItem(KEY); } catch (err) {}
+  location.reload();
+});
+go(0, true); progress();
+</script>
+</body>
+</html>
